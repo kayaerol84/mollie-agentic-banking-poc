@@ -6,6 +6,7 @@ import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor
 import org.springframework.ai.chat.memory.ChatMemory
 import org.springframework.ai.chat.memory.MessageWindowChatMemory
+import org.springframework.ai.chat.model.ChatModel
 import org.springframework.ai.tool.ToolCallbackProvider
 import org.springframework.ai.tool.method.MethodToolCallbackProvider
 import org.springframework.beans.factory.ObjectProvider
@@ -42,13 +43,15 @@ class AgentUnavailableException(message: String) : RuntimeException(message)
 
 @Service
 class FinanceAgent(
-    chatClientBuilder: ObjectProvider<ChatClient.Builder>,
+    chatModel: ObjectProvider<ChatModel>,
     private val toolCallbacks: ToolCallbackProvider,
     private val chatMemory: ChatMemory,
     private val finance: FinanceService,
     private val clock: Clock
 ) {
-    private val chatClient: ChatClient? = chatClientBuilder.ifAvailable
+    // Spring AI 2.0 always registers a ChatClient.Builder, even without a model, so build from the model.
+    private val chatClient: ChatClient? = chatModel.ifAvailable
+        ?.let { ChatClient.builder(it) }
         ?.defaultToolCallbacks(*toolCallbacks.toolCallbacks)
         ?.defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
         ?.build()

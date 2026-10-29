@@ -30,6 +30,7 @@ jobs:
           if grep -q 'BUILD SUCCESSFUL' build.log; then exit 0; fi
           grep -nE '^e: |error:|FAILED|Exception|Caused by|What went wrong' build.log | head -60 | enc > errors.txt
           echo "::error title=Build errors::$(cat errors.txt)"
+          echo "::error title=Failed tests::$(grep -A12 -E 'FAILED$' build.log | grep -vE '^\s+at ' | head -120 | enc)"
           echo "::error title=Build log tail::$(tail -120 build.log | enc)"
       - name: Upload test reports
         if: always()
