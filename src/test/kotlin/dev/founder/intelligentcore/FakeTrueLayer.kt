@@ -19,6 +19,8 @@ class FakeTrueLayer : AutoCloseable {
     val tokenRequests = CopyOnWriteArrayList<Map<String, String>>()
     val dataRequests = CopyOnWriteArrayList<String>()
     private val tokenCounter = AtomicInteger()
+    /** Sequence number of the most recently issued token pair (access-N / refresh-N). */
+    val lastIssued: Int get() = tokenCounter.get()
 
     /** Seconds the next issued access token is valid for. */
     @Volatile var nextExpiresIn = 3600

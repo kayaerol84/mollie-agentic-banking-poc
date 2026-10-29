@@ -138,11 +138,12 @@ class TrueLayerAdapterTest {
     fun `refreshes an expired access token transparently`() {
         fake.nextExpiresIn = 0 // token is immediately due for refresh
         connect()
+        val first = fake.lastIssued
         fake.nextExpiresIn = 3600
         finance.balance()
         val refresh = fake.tokenRequests.last()
         assertEquals("refresh_token", refresh["grant_type"])
-        assertEquals("refresh-1", refresh["refresh_token"])
-        assertTrue(fake.dataRequests.last().contains("[Bearer access-2]"), fake.dataRequests.last())
+        assertEquals("refresh-$first", refresh["refresh_token"])
+        assertTrue(fake.dataRequests.last().contains("[Bearer access-${first + 1}]"), fake.dataRequests.last())
     }
 }
