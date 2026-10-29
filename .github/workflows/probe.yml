@@ -1,0 +1,49 @@
+name: probe
+on: push
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with: { distribution: temurin, java-version: '21' }
+      - uses: gradle/actions/setup-gradle@v5
+      - name: run
+        shell: bash
+        run: |
+          set +e
+          mkdir -p out
+          ./gradlew bootJar --no-daemon -q > out/build.txt 2>&1
+          java -jar build/libs/*-0.2.0.jar > out/app.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8080/api/agent/status && break; sleep 1; done
+          {
+            echo "## status"; curl -s http://127.0.0.1:8080/api/agent/status; echo
+            echo "## balance"; curl -s http://127.0.0.1:8080/api/finance/balance; echo
+            echo "## propose"; curl -s -X POST http://127.0.0.1:8080/api/finance/payment-proposals -H 'Content-Type: application/json' -d '{"beneficiary":"Example Supplier BV","amount":1000.00,"idempotencyKey":"d1","reference":"Invoice 1043"}'; echo
+            curl -s -X POST http://127.0.0.1:8080/api/finance/payment-proposals -H 'Content-Type: application/json' -d '{"beneficiary":"Big Vendor BV","amount":8000.00,"idempotencyKey":"d2"}' >/dev/null
+            echo "## mcp init"; curl -s -X POST http://127.0.0.1:8080/mcp -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"curl","version":"1"}}}' -D - | head -20; echo
+            echo "## truelayer mode without creds"
+            FINANCE_DATA_PROVIDER=truelayer timeout 40 java -jar build/libs/*-0.2.0.jar --server.port=8081 2>&1 | grep -E "TRUELAYER_CLIENT_ID|APPLICATION FAILED" | head -3
+          } > out/checks.txt 2>&1
+          npm i -g playwright@1 >/dev/null 2>&1 && npx playwright install --with-deps chromium >/dev/null 2>&1
+          cat > shot.js <<'JS'
+          const { chromium } = require('playwright');
+          (async () => {
+            const b = await chromium.launch();
+            for (const [name, w, h, scheme] of [['desktop',1280,800,'light'],['mobile',390,844,'light'],['dark',1280,800,'dark']]) {
+              const p = await b.newPage({ viewport: { width: w, height: h }, colorScheme: scheme });
+              await p.goto('http://127.0.0.1:8080/'); await p.waitForTimeout(1500);
+              await p.screenshot({ path: `out/${name}.png`, fullPage: true });
+            }
+            await b.close();
+          })();
+          JS
+          NODE_PATH=$(npm root -g) node shot.js > out/shot.txt 2>&1
+          tail -40 out/app.log > out/app-tail.txt; rm out/app.log
+      - name: publish
+        if: always()
+        run: |
+          git config user.name ci; git config user.email ci@example.com
+          git checkout --orphan results && git rm -rqf --cached . && git add out && git commit -qm results && git push -qf origin HEAD:probe-results
