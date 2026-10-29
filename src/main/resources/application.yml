@@ -1,0 +1,40 @@
+server:
+  # The REST, approval and MCP endpoints have no authentication yet, so only listen locally.
+  address: ${SERVER_ADDRESS:127.0.0.1}
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: mollie-agentic-banking-poc
+  ai:
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY:}
+      chat:
+        options:
+          model: ${ANTHROPIC_MODEL:claude-sonnet-5-5}
+          max-tokens: 2048
+          temperature: 0.0
+    mcp:
+      server:
+        name: mollie-agentic-banking-poc
+        version: 0.2.0
+        type: SYNC
+        protocol: STREAMABLE
+        instructions: >-
+          Finance tools for a small business account. get_balance and list_transactions are read-only.
+          prepare_payment only creates a proposal that a human must approve; it never moves money.
+
+truelayer:
+  client-id: ${TRUELAYER_CLIENT_ID:}
+  client-secret: ${TRUELAYER_CLIENT_SECRET:}
+  redirect-uri: ${TRUELAYER_REDIRECT_URI:http://localhost:8080/truelayer/callback}
+  auth-base-url: https://auth.truelayer-sandbox.com
+  api-base-url: https://api.truelayer-sandbox.com
+  providers: uk-cs-mock
+
+finance:
+  data:
+    # synthetic | truelayer
+    provider: ${FINANCE_DATA_PROVIDER:synthetic}
+  policy:
+    minimum-balance: ${FINANCE_MINIMUM_BALANCE:5000.00}
