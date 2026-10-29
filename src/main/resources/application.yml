@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: mollie-agentic-banking-poc
+  ai:
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY:}
+      chat:
+        options:
+          model: ${ANTHROPIC_MODEL:claude-sonnet-5-5}
+          max-tokens: 2048
+          temperature: 0.0
+    mcp:
+      server:
+        name: mollie-agentic-banking-poc
+        version: 0.2.0
+        type: SYNC
+        protocol: STREAMABLE
+        instructions: >-
+          Finance tools for a small business account. get_balance and list_transactions are read-only.
+          prepare_payment only creates a proposal that a human must approve; it never moves money.
+
+finance:
+  data:
+    # synthetic | truelayer
+    provider: ${FINANCE_DATA_PROVIDER:synthetic}
+  policy:
+    minimum-balance: 5000.00
+    supported-currency: EUR
