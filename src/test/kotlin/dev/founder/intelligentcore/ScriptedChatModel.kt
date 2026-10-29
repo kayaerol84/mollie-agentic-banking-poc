@@ -44,5 +44,5 @@ class ScriptedChatModel : ChatModel {
         return ChatResponse(listOf(Generation(message)))
     }
 
-    override fun getDefaultOptions(): ChatOptions = ToolCallingChatOptions.builder().build()
+    override fun getOptions(): ChatOptions = ToolCallingChatOptions.builder().build()
 }
