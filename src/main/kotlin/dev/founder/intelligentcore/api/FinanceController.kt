@@ -17,7 +17,7 @@ import java.time.LocalDate
 data class PreparePaymentRequest(
     val beneficiary: String,
     val amount: BigDecimal,
-    val currency: String = "EUR",
+    val currency: String? = null,
     val idempotencyKey: String,
     val beneficiaryIban: String? = null,
     val reference: String? = null

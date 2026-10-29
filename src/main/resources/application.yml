@@ -24,10 +24,17 @@ spring:
           Finance tools for a small business account. get_balance and list_transactions are read-only.
           prepare_payment only creates a proposal that a human must approve; it never moves money.
 
+truelayer:
+  client-id: ${TRUELAYER_CLIENT_ID:}
+  client-secret: ${TRUELAYER_CLIENT_SECRET:}
+  redirect-uri: ${TRUELAYER_REDIRECT_URI:http://localhost:8080/truelayer/callback}
+  auth-base-url: https://auth.truelayer-sandbox.com
+  api-base-url: https://api.truelayer-sandbox.com
+  providers: uk-cs-mock
+
 finance:
   data:
     # synthetic | truelayer
     provider: ${FINANCE_DATA_PROVIDER:synthetic}
   policy:
-    minimum-balance: 5000.00
-    supported-currency: EUR
+    minimum-balance: ${FINANCE_MINIMUM_BALANCE:5000.00}

@@ -16,7 +16,7 @@ import java.time.ZoneOffset
 
 class FinanceServiceTest {
     private val clock = Clock.fixed(Instant.parse("2026-10-29T09:00:00Z"), ZoneOffset.UTC)
-    private val service = FinanceService(SyntheticAccountDataProvider(clock), BigDecimal("5000.00"), "EUR", clock)
+    private val service = FinanceService(SyntheticAccountDataProvider(clock), BigDecimal("5000.00"), clock)
 
     private fun pay(amount: String, key: String, beneficiary: String = "Supplier") =
         service.preparePayment(PreparePaymentCommand(beneficiary, BigDecimal(amount), "EUR", key))

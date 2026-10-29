@@ -26,7 +26,7 @@ class FinanceTools(private val finance: FinanceService) {
         name = "get_balance",
         description = "Get the business account's available balance, the amount already reserved by " +
             "payment proposals, the minimum balance the policy requires, and how much can still be spent " +
-            "above that minimum. Amounts are in EUR."
+            "above that minimum, all in the account currency."
     )
     fun getBalance(): BalanceView = finance.balance()
 
@@ -50,7 +50,7 @@ class FinanceTools(private val finance: FinanceService) {
 
     @Tool(
         name = "prepare_payment",
-        description = "Prepare an outgoing EUR payment proposal. This NEVER moves money: it runs the " +
+        description = "Prepare an outgoing payment proposal in the account currency. This NEVER moves money: it runs the " +
             "deterministic minimum-balance policy and returns a proposal that is either PENDING_APPROVAL " +
             "(a human must approve it outside this conversation) or REJECTED_POLICY. Reuse the same " +
             "idempotencyKey when retrying the same payment so no duplicate proposal is created."
@@ -58,7 +58,7 @@ class FinanceTools(private val finance: FinanceService) {
     fun preparePayment(
         @ToolParam(description = "Name of the person or company to pay")
         beneficiary: String,
-        @ToolParam(description = "Amount in EUR as a decimal number with at most 2 decimals, e.g. 1250.00")
+        @ToolParam(description = "Amount in the account currency, as a decimal number with at most 2 decimals, e.g. 1250.00")
         amount: BigDecimal,
         @ToolParam(
             description = "Unique key for this payment, e.g. 'pay-example-supplier-inv-1043'. " +
@@ -73,7 +73,7 @@ class FinanceTools(private val finance: FinanceService) {
         PreparePaymentCommand(
             beneficiary = beneficiary,
             amount = amount,
-            currency = "EUR",
+            currency = null,
             idempotencyKey = idempotencyKey,
             beneficiaryIban = beneficiaryIban,
             reference = reference,

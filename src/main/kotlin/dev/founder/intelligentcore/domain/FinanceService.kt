@@ -19,7 +19,6 @@ import java.util.concurrent.ConcurrentHashMap
 class FinanceService(
     private val accounts: AccountDataProvider,
     @Value("\${finance.policy.minimum-balance:5000.00}") minimumBalance: BigDecimal,
-    @Value("\${finance.policy.supported-currency:EUR}") private val supportedCurrency: String,
     private val clock: Clock
 ) {
     private val minimumBalance = minimumBalance.setScale(2, RoundingMode.HALF_UP)
@@ -35,7 +34,7 @@ class FinanceService(
         return BalanceView(
             accountId = account.id,
             accountName = account.displayName,
-            availableBalance = balance.available,
+            availableBalance = balance.available.setScale(2, RoundingMode.HALF_UP),
             reservedForProposals = reserved,
             spendableAboveMinimum = (balance.available - reserved - minimumBalance).max(BigDecimal.ZERO.setScale(2)),
             minimumRequiredBalance = minimumBalance,
@@ -57,20 +56,21 @@ class FinanceService(
         require(command.beneficiary.isNotBlank()) { "beneficiary must not be blank" }
         require(command.amount > BigDecimal.ZERO) { "amount must be greater than zero" }
         require(command.amount.scale() <= 2) { "amount must have at most 2 decimals" }
-        require(command.currency == supportedCurrency) { "POC currently supports $supportedCurrency only" }
         require(command.idempotencyKey.isNotBlank()) { "idempotencyKey must not be blank" }
 
         proposalIdsByKey[command.idempotencyKey]?.let { existingId ->
             val existing = proposalsById.getValue(existingId)
-            require(existing.amount.compareTo(command.amount) == 0 && existing.beneficiary == command.beneficiary) {
+            require(existing.amount.compareTo(command.amount) == 0 && existing.beneficiary == command.beneficiary.trim()) {
                 "idempotencyKey '${command.idempotencyKey}' was already used for a different payment"
             }
             return existing
         }
 
         val balance = accounts.balance()
-        require(balance.currency == command.currency) {
-            "account currency ${balance.currency} does not match payment currency ${command.currency}"
+        // Payments are made in the account's own currency; no FX in this POC.
+        val currency = command.currency ?: balance.currency
+        require(currency == balance.currency) {
+            "this account only pays in ${balance.currency}; got $currency"
         }
         val reserved = reserved()
         val projected = (balance.available - reserved - command.amount).setScale(2, RoundingMode.HALF_UP)
@@ -82,9 +82,9 @@ class FinanceService(
             beneficiary = command.beneficiary.trim(),
             beneficiaryIban = command.beneficiaryIban?.replace(" ", "")?.uppercase(),
             amount = command.amount.setScale(2),
-            currency = command.currency,
+            currency = currency,
             reference = command.reference,
-            balanceBefore = balance.available,
+            balanceBefore = balance.available.setScale(2, RoundingMode.HALF_UP),
             reservedBefore = reserved,
             projectedBalance = projected,
             minimumRequiredBalance = minimumBalance,
@@ -92,7 +92,7 @@ class FinanceService(
             reason = if (allowed) {
                 "Payment prepared; a human must approve it. No money has moved."
             } else {
-                "Payment would leave $projected ${command.currency} after existing reservations of $reserved, " +
+                "Payment would leave $projected $currency after existing reservations of $reserved, " +
                     "below the minimum balance of $minimumBalance. No money has moved."
             },
             requestedBy = command.requestedBy,

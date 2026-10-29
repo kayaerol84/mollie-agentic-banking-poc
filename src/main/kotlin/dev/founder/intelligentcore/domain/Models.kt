@@ -47,7 +47,8 @@ data class BalanceView(
 data class PreparePaymentCommand(
     val beneficiary: String,
     val amount: BigDecimal,
-    val currency: String = "EUR",
+    /** Defaults to the account currency. */
+    val currency: String? = null,
     val idempotencyKey: String,
     val beneficiaryIban: String? = null,
     val reference: String? = null,

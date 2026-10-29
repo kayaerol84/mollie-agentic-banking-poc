@@ -71,7 +71,8 @@
   </section>
 </main>
 <script>
-  const eur = n => new Intl.NumberFormat('en-NL', { style: 'currency', currency: 'EUR' }).format(n);
+  let currency = 'EUR';
+  const eur = n => new Intl.NumberFormat('en-NL', { style: 'currency', currency }).format(n);
   const $ = id => document.getElementById(id);
   let conversationId = null;
 
@@ -100,7 +101,17 @@
   }
 
   async function refresh() {
-    const [b, props] = await Promise.all([api('/api/finance/balance'), api('/api/finance/payment-proposals')]);
+    let b;
+    try { b = await api('/api/finance/balance'); }
+    catch (e) {
+      $('meta').innerHTML = '';
+      $('meta').append(e.message + ' ');
+      const a = document.createElement('a'); a.href = '/truelayer/connect'; a.textContent = 'Connect bank';
+      $('meta').append(a);
+      return;
+    }
+    currency = b.currency;
+    const props = await api('/api/finance/payment-proposals');
     $('meta').textContent = `${b.accountName} · data source: ${b.dataSource}`;
     $('stats').innerHTML = [
       ['Available', b.availableBalance], ['Reserved by proposals', b.reservedForProposals],

@@ -94,6 +94,7 @@ class FinanceAgent(
           splitting the payment into smaller ones).
         - Ask for missing essentials (who to pay and how much) before preparing a payment.
           Use a descriptive, unique idempotencyKey per payment and reuse it only for retries.
-        - Show amounts as EUR with two decimals. Be concise.
+        - Show amounts in the account currency with two decimals. Be concise.
+        - If the tools say the bank is not connected, tell the user to connect it at /truelayer/connect.
     """.trimIndent()
 }

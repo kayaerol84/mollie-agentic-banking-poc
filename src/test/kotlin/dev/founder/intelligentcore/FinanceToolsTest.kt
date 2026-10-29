@@ -17,7 +17,7 @@ import java.time.ZoneOffset
 /** Exercises the tools exactly as Spring AI will: via generated schemas and JSON arguments. */
 class FinanceToolsTest {
     private val clock = Clock.fixed(Instant.parse("2026-10-29T09:00:00Z"), ZoneOffset.UTC)
-    private val service = FinanceService(SyntheticAccountDataProvider(clock), BigDecimal("5000.00"), "EUR", clock)
+    private val service = FinanceService(SyntheticAccountDataProvider(clock), BigDecimal("5000.00"), clock)
     private val callbacks: Map<String, ToolCallback> = MethodToolCallbackProvider.builder()
         .toolObjects(FinanceTools(service))
         .build()
