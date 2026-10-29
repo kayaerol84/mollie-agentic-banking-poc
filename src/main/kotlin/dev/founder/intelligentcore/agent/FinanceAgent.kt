@@ -49,7 +49,7 @@ class FinanceAgent(
     private val clock: Clock
 ) {
     private val chatClient: ChatClient? = chatClientBuilder.ifAvailable
-        ?.defaultToolCallbacks(toolCallbacks)
+        ?.defaultToolCallbacks(*toolCallbacks.toolCallbacks)
         ?.defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
         ?.build()
 

@@ -65,7 +65,7 @@ class AgentWorkflowTest {
         assertEquals(BigDecimal("1000.00"), finance.balance().reservedForProposals)
 
         // The model was offered exactly the three tools...
-        val offered = (model.prompts.first().options as ToolCallingChatOptions).toolCallbacks.map { it.toolDefinition.name() }
+        val offered = (model.prompts.first().options as ToolCallingChatOptions).toolCallbacks!!.map { it.toolDefinition.name() }
         assertEquals(setOf("get_balance", "list_transactions", "prepare_payment"), offered.toSet())
         // ...and saw the real tool output before answering.
         assertTrue(toolResponses().any { it.name() == "prepare_payment" && it.responseData().contains("PENDING_APPROVAL") })
