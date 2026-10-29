@@ -1,1 +1,1 @@
-rootProject.name = "intelligent-core-poc"
+rootProject.name = "mollie-agentic-banking-poc"
