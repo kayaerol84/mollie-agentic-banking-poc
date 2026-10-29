@@ -32,3 +32,4 @@ build/
 *.iml
 out/
 .DS_Store
+!gradle/wrapper/gradle-wrapper.jar
