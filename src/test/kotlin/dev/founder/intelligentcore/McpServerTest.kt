@@ -28,7 +28,7 @@ class McpServerTest {
 
     @BeforeEach
     fun connect() {
-        client = McpClient.sync(HttpClientStreamableHttpTransport.builder("http://localhost:$port").build())
+        client = McpClient.sync(HttpClientStreamableHttpTransport.builder("http://127.0.0.1:$port").build())
             .requestTimeout(Duration.ofSeconds(10))
             .build()
         client.initialize()
